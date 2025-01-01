@@ -1,0 +1,88 @@
+blueprint:
+  name: Timer light on with retry
+  description: Turn on light and associated countdown timer. Retry if light-on command fails.
+  author: Kevin Backhouse
+  domain: script
+  input:
+    timer_arg:
+      name: Timer
+      description: The timer associated with the light
+      selector:
+        entity:
+          filter:
+            - domain: timer
+    light_arg:
+      name: Light
+      description: The light to switch off
+      selector:
+        entity:
+          filter:
+            - domain: light
+sequence:
+  - variables:
+      timer_arg: !input timer_arg
+  - if:
+      - condition: state
+        entity_id: !input light_arg
+        state: "on"
+    then:
+      - if:
+          - condition: state
+            entity_id: !input timer_arg
+            state: active
+          - condition: template
+            value_template: >-
+              {{
+              as_datetime(state_attr(timer_arg,'finishes_at')) < now() + timedelta(**duration)
+              }}
+        then:
+          - action: timer.start
+            metadata: {}
+            data:
+              duration: "{{ duration }}"
+            target:
+              entity_id: !input timer_arg
+    else:
+      - action: timer.start
+        metadata: {}
+        data:
+          duration: "{{ duration }}"
+        target:
+          entity_id: !input timer_arg
+      - repeat:
+          sequence:
+            - action: light.turn_on
+              metadata: {}
+              data: {}
+              target:
+                entity_id: !input light_arg
+            - delay:
+                hours: 0
+                minutes: 0
+                seconds: 1
+                milliseconds: 0
+          while:
+            - condition: state
+              entity_id: !input light_arg
+              state: "off"
+            - condition: state
+              entity_id: !input timer_arg
+              state: active
+icon: mdi:lightbulb
+mode: queued
+description: ""
+fields:
+  duration:
+    selector:
+      duration:
+        enable_day: true
+        enable_millisecond: true
+    name: duration
+    description: How long the light should stay on
+    default:
+      hours: 0
+      minutes: 0
+      seconds: 30
+      milliseconds: 0
+      days: 0
+    required: true
