@@ -1,0 +1,53 @@
+blueprint:
+  name: Timer light off with retry
+  description: Turn light off when timer finishes. Retry if light-off command fails.
+  author: Kevin Backhouse
+  domain: automation
+  input:
+    timer_arg:
+      name: Timer
+      description: The timer associated with the light
+      selector:
+        entity:
+          filter:
+            - domain: timer
+    light_arg:
+      name: Light
+      description: The light to switch off
+      selector:
+        entity:
+          filter:
+            - domain: light
+triggers:
+  - trigger: event
+    event_type: timer.finished
+    event_data:
+      entity_id: !input timer_arg
+conditions: []
+actions:
+  - action: light.turn_off
+    continue_on_error: true
+    metadata: {}
+    data: {}
+    target:
+      entity_id: !input light_arg
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 1
+      milliseconds: 0
+  - if:
+      - condition: state
+        entity_id: !input light_arg
+        state: "on"
+      - condition: state
+        entity_id: !input timer_arg
+        state: idle
+    then:
+      - action: timer.start
+        metadata: {}
+        data:
+          duration: "4"
+        target:
+          entity_id: !input timer_arg
+mode: queued
