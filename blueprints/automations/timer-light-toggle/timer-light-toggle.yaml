@@ -1,0 +1,69 @@
+blueprint:
+  name: Timer light toggle
+  description: Toggle light and associated timer on/off
+  author: Kevin Backhouse
+  domain: automation
+  input:
+    trigger_arg:
+      name: Trigger
+      description: The trigger for toggling the light
+      selector:
+        trigger:
+    light_arg:
+      name: Light
+      description: The light to switch off
+      selector:
+        entity:
+          filter:
+            - domain: light
+    duration_arg:
+      selector:
+        duration:
+          enable_day: true
+          enable_millisecond: true
+      name: duration
+      description: How long the light should stay on
+    light_on_script:
+      name: Light on script
+      description: Script for switching light on
+      selector:
+        entity:
+          filter:
+            - domain: script
+    light_off_script:
+      name: Light off script
+      description: Script for switching light off
+      selector:
+        entity:
+          filter:
+            - domain: script
+description: ""
+conditions: []
+trigger:
+  !input trigger_arg
+actions:
+  - if:
+      - condition: state
+        entity_id: !input light_arg
+        state: "on"
+    then:
+      - data:
+          variables:
+            duration:
+              hours: 0
+              minutes: 0
+              seconds: 0
+              milliseconds: 1
+              days: 0
+            force: true
+        action: script.turn_on
+        target:
+          entity_id: !input light_off_script
+    else:
+      - data:
+          variables:
+            duration: !input duration_arg
+        action: script.turn_on
+        target:
+          entity_id: !input light_on_script
+mode: queued
