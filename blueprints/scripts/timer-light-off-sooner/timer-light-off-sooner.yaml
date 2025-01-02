@@ -1,0 +1,88 @@
+blueprint:
+  name: Timer light off sooner
+  description: Reduce remaining time on countdown timer associated with light.
+  author: Kevin Backhouse
+  domain: script
+  input:
+    timer_arg:
+      name: Timer
+      description: The timer associated with the light
+      selector:
+        entity:
+          filter:
+            - domain: timer
+    light_arg:
+      name: Light
+      description: The light to switch off
+      selector:
+        entity:
+          filter:
+            - domain: light
+sequence:
+  - variables:
+      timer_arg: !input timer_arg
+  - if:
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: !input light_arg
+            state: "on"
+    then:
+      - stop: The light is already off.
+  - if:
+      - condition: state
+        entity_id: !input timer_arg
+        state: active
+    then:
+      - if:
+          - condition: template
+            value_template: >-
+              {{
+              as_datetime(state_attr(timer_arg,'finishes_at')) <= now() + timedelta(**duration)
+              }}
+        then:
+          - stop: >-
+              The timer is already scheduled to switch the light off within the
+              desired timeframe.
+    else:
+      - if:
+          - condition: not
+            conditions:
+              - condition: template
+                value_template: "{{ force }}"
+        then:
+          - stop: >-
+              The timer isn't running, which means that the light was switched
+              on manually. Use "force == True" to override this behavior.
+  - action: timer.start
+    metadata: {}
+    data:
+      duration: "{{ duration }}"
+    target:
+      entity_id: !input timer_arg
+description: ""
+fields:
+  duration:
+    selector:
+      duration:
+        enable_day: true
+        enable_millisecond: true
+    name: duration
+    required: true
+    default:
+      hours: 0
+      minutes: 0
+      seconds: 15
+      milliseconds: 0
+      days: 0
+    description: How long the light should stay on
+  force:
+    selector:
+      boolean: {}
+    name: force
+    description: >-
+      "Even if the timer isn't currently running, schedule it to switch the
+      light off"
+    default: false
+    required: true
+mode: queued
