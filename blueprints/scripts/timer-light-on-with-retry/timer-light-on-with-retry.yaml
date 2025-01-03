@@ -18,9 +18,17 @@ blueprint:
         entity:
           filter:
             - domain: light
+    condition_arg:
+      name: Conditions
+      description: Conditions for this script to run (optional)
+      selector:
+        condition:
 sequence:
   - variables:
       timer_arg: !input timer_arg
+  - condition: and
+    conditions:
+      !input condition_arg
   - if:
       - condition: state
         entity_id: !input light_arg
