@@ -21,6 +21,7 @@ blueprint:
     condition_arg:
       name: Conditions
       description: Conditions for this script to run (optional)
+      default: []
       selector:
         condition:
 sequence:
