@@ -77,7 +77,6 @@ sequence:
             - condition: state
               entity_id: !input timer_arg
               state: active
-icon: mdi:lightbulb
 mode: queued
 description: ""
 fields:
