@@ -37,9 +37,11 @@ actions:
       seconds: 1
       milliseconds: 0
   - if:
-      - condition: state
-        entity_id: !input light_arg
-        state: "on"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: !input light_arg
+            state: "off"
       - condition: state
         entity_id: !input timer_arg
         state: idle

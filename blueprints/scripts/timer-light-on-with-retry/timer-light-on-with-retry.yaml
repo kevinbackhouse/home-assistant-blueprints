@@ -61,6 +61,7 @@ sequence:
       - repeat:
           sequence:
             - action: light.turn_on
+              continue_on_error: true
               metadata: {}
               data: {}
               target:
@@ -71,9 +72,11 @@ sequence:
                 seconds: 1
                 milliseconds: 0
           while:
-            - condition: state
-              entity_id: !input light_arg
-              state: "off"
+            - condition: not
+              conditions:
+                - condition: state
+                  entity_id: !input light_arg
+                  state: "on"
             - condition: state
               entity_id: !input timer_arg
               state: active
